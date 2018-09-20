@@ -81,7 +81,7 @@ def main():
     parser = argparse.ArgumentParser(description='''Simple tool to show you potential file size savings if ELF sections, 
     not used during the running of a program, are removed''')
     parser.add_argument('paths', metavar='path', type=str, nargs='*', help="Directory or file to scan for savings")
-    parser.add_argument('--verbose','-v', action='count', help='increase the verbosity of the program')
+    parser.add_argument('--verbose','-v', default=0, action='count', help='increase the verbosity of the program')
 
     args = parser.parse_args()
     verbosity = args.verbose
