@@ -19,7 +19,7 @@ def print_v(v, str, *args):
 def is_elf(filename):
     r = False
     try:
-        with open(filename) as f:
+        with open(filename, 'rb') as f:
             r = f.read(4) == '\x7fELF'
     except IOError:
         pass
@@ -32,7 +32,7 @@ def calc_savings_file(filename):
         return 0
     total = 0
     try:
-        output = subprocess.check_output(['objdump', '-hw', filename])
+        output = subprocess.check_output(['objdump', '-hw', filename]).decode('utf8')
         for line in output.splitlines():
             fields = FIELD_RE.split(line)
             if len(fields) > 4 and fields[2] in SECTIONS:
