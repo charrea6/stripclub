@@ -20,7 +20,7 @@ def is_elf(filename):
     r = False
     try:
         with open(filename, 'rb') as f:
-            r = f.read(4) == '\x7fELF'
+            r = f.read(4) == b'\x7fELF'
     except IOError:
         pass
 
