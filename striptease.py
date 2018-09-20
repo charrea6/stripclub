@@ -1,12 +1,20 @@
+import argparse
 import os
 import re
-import sys
 import subprocess
 
 
 FIELD_RE = re.compile('[ \t]+')
 
 SECTIONS = ['.pdr', '.comment', '.note']
+
+verbosity = 0
+
+
+def print_v(v, str, *args):
+    if verbosity >= v:
+        print(str % args)
+
 
 def is_elf(filename):
     r = False
@@ -28,9 +36,12 @@ def calc_savings_file(filename):
         for line in output.splitlines():
             fields = FIELD_RE.split(line)
             if len(fields) > 4 and fields[2] in SECTIONS:
-                total += int(fields[3], 16)
+                section_size = int(fields[3], 16)
+                print_v(2, '%s section %s size %d bytes', filename, fields[2], section_size)
+                total += section_size
     except subprocess.CalledProcessError:
         return 0
+    print_v(1, '%s savings %d bytes', filename, total)
     return total
 
 
@@ -40,7 +51,8 @@ def calc_savings(path):
         for root, dirs, files in os.walk(path):
             for f in files:
                 filename = os.path.join(root, f)
-                total += calc_savings_file(filename)
+                if not os.path.islink(filename):
+                    total += calc_savings_file(filename)
     elif os.path.isfile(path):
         total = calc_savings_file(path)
     return total
@@ -63,12 +75,20 @@ def human_size(s):
 
 
 def main():
+    global verbosity
     paths = []
 
-    if len(sys.argv) == 1:
+    parser = argparse.ArgumentParser(description='''Simple tool to show you potential file size savings if ELF sections, 
+    not used during the running of a program, are removed''')
+    parser.add_argument('paths', metavar='path', type=str, nargs='*', help="Directory or file to scan for savings")
+    parser.add_argument('--verbose','-v', action='count', help='increase the verbosity of the program')
+
+    args = parser.parse_args()
+    verbosity = args.verbose
+    if len(args.paths) == 0:
         paths.append('.')
     else:
-        paths.extend(sys.argv[1:])
+        paths.extend(args.paths)
 
     total = 0
     for path in paths:
